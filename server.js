@@ -498,6 +498,7 @@ app.post('/admin/update-result', isAdminAuthenticated, upload.single('editResult
       [id],
       (err, result) => {
         if (err || !result) {
+          console.error('Error finding result:', err);
           return res.status(404).json({ success: false, message: 'النتيجة غير موجودة' });
         }
 
@@ -505,7 +506,11 @@ app.post('/admin/update-result', isAdminAuthenticated, upload.single('editResult
         if (req.file && result.fileUrl) {
           const oldFilePath = path.join(__dirname, 'public', result.fileUrl);
           if (fs.existsSync(oldFilePath)) {
-            fs.unlinkSync(oldFilePath);
+            try {
+              fs.unlinkSync(oldFilePath);
+            } catch (fileError) {
+              console.error('Error deleting old file:', fileError);
+            }
           }
         }
 
@@ -513,12 +518,16 @@ app.post('/admin/update-result', isAdminAuthenticated, upload.single('editResult
 
         db.run(
           `UPDATE results SET playerPhone = ?, playerName = ?, fileUrl = ? WHERE id = ?`,
-          [playerPhone, playerName, finalFileUrl, id],
+          [playerPhone, playerName || null, finalFileUrl, id],
           function(err) {
             if (err) {
               console.error('Error updating result:', err);
-              return res.status(500).json({ success: false, message: 'حدث خطأ أثناء تحديث النتيجة' });
+              return res.status(500).json({ 
+                success: false, 
+                message: 'حدث خطأ أثناء تحديث النتيجة في قاعدة البيانات' 
+              });
             }
+
             res.json({ 
               success: true, 
               message: 'تم تحديث النتيجة بنجاح',
@@ -529,8 +538,11 @@ app.post('/admin/update-result', isAdminAuthenticated, upload.single('editResult
       }
     );
   } catch (error) {
-    console.error('Error updating result:', error);
-    res.status(500).json({ success: false, message: 'حدث خطأ أثناء تحديث النتيجة' });
+    console.error('Error in update result:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'حدث خطأ غير متوقع أثناء تحديث النتيجة' 
+    });
   }
 });
 
