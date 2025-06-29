@@ -563,10 +563,10 @@ app.post('/admin/update-result', isAdminAuthenticated, upload.single('editResult
       }
     );
   } catch (error) {
-    console.error('Server error:', error);
+    console.error('Error updating result:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'حدث خطأ غير متوقع في الخادم' 
+      message: 'حدث خطأ غير متوقع أثناء تحديث النتيجة' 
     });
   }
 });
