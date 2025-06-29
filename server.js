@@ -69,15 +69,16 @@ db.serialize(() => {
     )
   `);
 
-  db.run(`
-    CREATE TABLE IF NOT EXISTS results (
-      id TEXT PRIMARY KEY,
-      playerPhone TEXT NOT NULL,
-      playerName TEXT,
-      fileUrl TEXT NOT NULL,
-      uploadedAt DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+db.run(`
+  CREATE TABLE IF NOT EXISTS results (
+    id TEXT PRIMARY KEY,
+    playerPhone TEXT NOT NULL,
+    playerName TEXT,
+    fileUrl TEXT NOT NULL,
+    type TEXT DEFAULT 'booking', -- يمكن أن يكون 'booking' أو 'inquiry'
+    uploadedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
   
   db.run(`
     CREATE TABLE IF NOT EXISTS admin (
@@ -333,22 +334,7 @@ app.post('/admin/update-booking/:id', isAdminAuthenticated, async (req, res) => 
           return res.json({ success: false, message: 'الطلب غير موجود' });
         }
 
-        if (this.changes > 0 && status === 'approved') {
-          db.get(
-            `SELECT phone, name FROM bookings WHERE id = ?`,
-            [id],
-            (err, booking) => {
-              if (err || !booking) return;
-
-              db.run(
-                `INSERT INTO results (id, playerPhone, playerName, fileUrl) 
-                 VALUES (?, ?, ?, ?)`,
-                [uuidv4(), booking.phone, booking.name, '']
-              );
-            }
-          );
-        }
-
+        // إزالة هذا الجزء الذي كان يضيف تلقائياً إلى النتائج
         res.json({ success: true });
       }
     );
@@ -470,7 +456,7 @@ app.post('/admin/send-message', isAdminAuthenticated, async (req, res) => {
 
 app.post('/admin/upload-result', isAdminAuthenticated, upload.single('resultFile'), async (req, res) => {
   try {
-    const { playerPhone, playerName = 'غير معروف' } = req.body;
+    const { playerPhone, playerName = 'غير معروف', type = 'booking' } = req.body;
     
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'لم يتم اختيار ملف' });
@@ -479,9 +465,9 @@ app.post('/admin/upload-result', isAdminAuthenticated, upload.single('resultFile
     const fileUrl = '/uploads/' + req.file.filename;
 
     db.run(
-      `INSERT INTO results (id, playerPhone, playerName, fileUrl) 
-       VALUES (?, ?, ?, ?)`,
-      [uuidv4(), playerPhone, playerName, fileUrl],
+      `INSERT INTO results (id, playerPhone, playerName, fileUrl, type) 
+       VALUES (?, ?, ?, ?, ?)`,
+      [uuidv4(), playerPhone, playerName, fileUrl, type],
       function(err) {
         if (err) {
           console.error('Error uploading result:', err);
