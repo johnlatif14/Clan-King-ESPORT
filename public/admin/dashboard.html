@@ -403,11 +403,11 @@
         </button>
       </div>
       <div class="p-4">
-        <form id="editResultForm" enctype="multipart/form-data">
-          <input type="hidden" id="editResultId">
+       <form id="editResultForm" enctype="multipart/form-data">
+          <input type="hidden" id="editResultId" name="id">
           <div class="mb-4">
-            <label class="block text-gray-700 dark:text-gray-300 mb-2">رقم هاتف اللاعب</label>
-            <input type="tel" id="editPlayerPhone" class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700" required>
+            <label class="block text-gray-700 dark:text-gray-300 mb-2">رقم هاتف اللاعب *</label>
+            <input type="tel" id="editPlayerPhone" name="playerPhone" class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700" required>
           </div>
           <div class="mb-4">
             <label class="block text-gray-700 dark:text-gray-300 mb-2">اسم اللاعب</label>
@@ -1035,23 +1035,37 @@ document.getElementById('editResultForm').addEventListener('submit', async (e) =
   
   try {
     const formData = new FormData(e.target);
+    const id = document.getElementById('editResultId').value;
+    const playerPhone = document.getElementById('editPlayerPhone').value;
+    
+    // التحقق من الحقول المطلوبة
+    if (!id || !playerPhone) {
+      throw new Error('معرّف النتيجة ورقم الهاتف مطلوبان');
+    }
+    
+    // إضافة الحقول الإجبارية يدوياً
+    formData.append('id', id);
+    formData.append('playerPhone', playerPhone);
+    
+    // إضافة الحقول الاختيارية إذا كانت موجودة
+    const playerName = document.getElementById('editPlayerName').value;
+    if (playerName) {
+      formData.append('playerName', playerName);
+    }
+    
+    // تسجيل البيانات المرسلة للتتبع
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
     
     const response = await fetch('/admin/update-result', {
       method: 'POST',
       body: formData
     });
     
-    // تحقق من حالة الاستجابة أولاً
     if (!response.ok) {
-      const errorText = await response.text();
-      try {
-        // حاول تحليل النص كـ JSON
-        const errorData = JSON.parse(errorText);
-        throw new Error(errorData.message || 'حدث خطأ غير معروف');
-      } catch {
-        // إذا لم يكن JSON، استخدم النص كما هو
-        throw new Error(errorText || 'حدث خطأ في الخادم');
-      }
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'حدث خطأ في الخادم');
     }
     
     const data = await response.json();
