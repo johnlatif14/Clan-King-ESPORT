@@ -669,25 +669,30 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // عرض جدول النتائج
 function renderResultsTable(results) {
-  console.log('Rendering results:', results); // للتتبع
-  
   const resultsTable = document.getElementById('resultsTable');
-  if (!resultsTable) {
-    console.error('Results table element not found!');
-    return;
-  }
   
-  if (!results || results.length === 0) {
+  if (!results || !Array.isArray(results)) {
     resultsTable.innerHTML = `
       <tr>
-        <td colspan="4" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
+        <td colspan="4" class="text-center py-4 text-red-500">
+          خطأ في تحميل النتائج
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  if (results.length === 0) {
+    resultsTable.innerHTML = `
+      <tr>
+        <td colspan="4" class="text-center py-4 text-gray-500">
           لا توجد نتائج معتمدة حتى الآن
         </td>
       </tr>
     `;
     return;
   }
-  
+
   const resultsHtml = results.map(result => {
     // تأكد من أن جميع الحقول موجودة
     const playerName = result.playerName || 'غير معروف';
@@ -1021,39 +1026,51 @@ if (tabTextElement) {
   });
   
   // تعديل النتيجة
-  document.getElementById('editResultForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+document.getElementById('editResultForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = 'جاري الحفظ...';
+  
+  try {
+    const formData = new FormData(e.target);
     
-    const formData = new FormData();
-    formData.append('id', document.getElementById('editResultId').value);
-    formData.append('playerPhone', document.getElementById('editPlayerPhone').value);
-    formData.append('playerName', document.getElementById('editPlayerName').value);
+    const response = await fetch('/admin/update-result', {
+      method: 'POST',
+      body: formData
+    });
     
-    const fileInput = document.getElementById('editResultFile');
-    if (fileInput.files[0]) {
-      formData.append('resultFile', fileInput.files[0]);
-    }
-    
-    try {
-      const response = await fetch('/admin/update-result', {
-        method: 'POST',
-        body: formData
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        document.getElementById('editResultModal').classList.add('hidden');
-        showSuccess('تم تحديث النتيجة بنجاح');
-        loadData();
-      } else {
-        showError(data.message || 'حدث خطأ أثناء تحديث النتيجة');
+    // تحقق من حالة الاستجابة أولاً
+    if (!response.ok) {
+      const errorText = await response.text();
+      try {
+        // حاول تحليل النص كـ JSON
+        const errorData = JSON.parse(errorText);
+        throw new Error(errorData.message || 'حدث خطأ غير معروف');
+      } catch {
+        // إذا لم يكن JSON، استخدم النص كما هو
+        throw new Error(errorText || 'حدث خطأ في الخادم');
       }
-    } catch (error) {
-      console.error('Error updating result:', error);
-      showError('حدث خطأ أثناء تحديث النتيجة');
     }
-  });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      document.getElementById('editResultModal').classList.add('hidden');
+      showSuccess(data.message || 'تم تحديث النتيجة بنجاح');
+      loadData();
+    } else {
+      throw new Error(data.message || 'فشل تحديث النتيجة');
+    }
+  } catch (error) {
+    console.error('Update failed:', error);
+    showError(error.message || 'حدث خطأ أثناء تحديث النتيجة');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = 'حفظ التعديلات';
+  }
+});
   
   // إرسال رد على الاستفسار
   document.getElementById('respondInquiryForm').addEventListener('submit', async (e) => {
