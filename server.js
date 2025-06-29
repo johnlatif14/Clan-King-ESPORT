@@ -497,6 +497,14 @@ app.post('/admin/upload-result', isAdminAuthenticated, upload.single('resultFile
 app.post('/admin/update-result', isAdminAuthenticated, upload.single('editResultFile'), async (req, res) => {
   try {
     const { id, playerPhone, playerName } = req.body;
+    
+    if (!id || !playerPhone) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'معرّف النتيجة ورقم الهاتف مطلوبان' 
+      });
+    }
+
     const fileUrl = req.file ? '/uploads/' + req.file.filename : null;
 
     // الحصول على معلومات النتيجة الحالية
@@ -504,9 +512,19 @@ app.post('/admin/update-result', isAdminAuthenticated, upload.single('editResult
       `SELECT fileUrl FROM results WHERE id = ?`,
       [id],
       (err, result) => {
-        if (err || !result) {
-          console.error('Error finding result:', err);
-          return res.status(404).json({ success: false, message: 'النتيجة غير موجودة' });
+        if (err) {
+          console.error('Database error:', err);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'خطأ في قاعدة البيانات' 
+          });
+        }
+        
+        if (!result) {
+          return res.status(404).json({ 
+            success: false, 
+            message: 'النتيجة غير موجودة' 
+          });
         }
 
         // إذا تم رفع ملف جديد، احذف الملف القديم
@@ -528,10 +546,10 @@ app.post('/admin/update-result', isAdminAuthenticated, upload.single('editResult
           [playerPhone, playerName || null, finalFileUrl, id],
           function(err) {
             if (err) {
-              console.error('Error updating result:', err);
+              console.error('Update error:', err);
               return res.status(500).json({ 
                 success: false, 
-                message: 'حدث خطأ أثناء تحديث النتيجة في قاعدة البيانات' 
+                message: 'فشل تحديث النتيجة في قاعدة البيانات' 
               });
             }
 
@@ -545,10 +563,10 @@ app.post('/admin/update-result', isAdminAuthenticated, upload.single('editResult
       }
     );
   } catch (error) {
-    console.error('Error in update result:', error);
+    console.error('Server error:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'حدث خطأ غير متوقع أثناء تحديث النتيجة' 
+      message: 'حدث خطأ غير متوقع في الخادم' 
     });
   }
 });
