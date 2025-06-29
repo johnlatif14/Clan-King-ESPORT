@@ -461,6 +461,14 @@
   </div>
 
  <script>
+  // أضف هذا الكود في بداية ملف script في dashboard.html
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Page elements:', {
+    pageTitle: document.getElementById('pageTitle'),
+    resultsTable: document.getElementById('resultsTable'),
+    tabs: document.querySelectorAll('[data-tab]')
+  });
+});
   // تحقق من الجلسة عند تحميل الصفحة
   async function checkSession() {
     try {
