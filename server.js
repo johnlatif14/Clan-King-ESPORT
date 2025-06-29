@@ -270,6 +270,12 @@ app.get('/admin/data', isAdminAuthenticated, (req, res) => {
             return res.status(500).json({ success: false });
           }
 
+          console.log('Sending data to admin:', { // للتتبع
+            bookings: bookings.length,
+            inquiries: inquiries.length,
+            results: results.length
+          });
+
           res.json({
             bookings: bookings,
             inquiries: inquiries,
@@ -428,20 +434,21 @@ app.delete('/admin/delete-inquiry/:id', isAdminAuthenticated, async (req, res) =
 
 app.post('/admin/send-message', isAdminAuthenticated, async (req, res) => {
   try {
-    const { email, message, senderName = "STORE King个ESPORTSツ" } = req.body;
+    const { email, message, senderName = "Clan King个ESPORTSツ" } = req.body;
 
     transporter.sendMail({
       from: `"${senderName}" <${process.env.SMTP_USER}>`,
       to: email,
-      subject: 'رسالة من إدارة STORE King个ESPORTSツ',
+      subject: 'رسالة من كلان  King个ESPORTSツ',
       html: `
         <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #4f46e5;">رسالة من إدارة STORE King个ESPORTSツ</h2>
+          <h2 style="color: #4f46e5;">رسالة من Clan King个ESPORTSツ</h2>
           <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin-top: 20px;">
             ${message.replace(/\n/g, '<br>')}
           </div>
           <p style="margin-top: 30px; color: #6b7280; font-size: 14px;">
-            هذه الرسالة مرسلة من نظام STORE King个ESPORTSツ - لا ترد على هذا البريد
+            هذه الرسالة مرسلة من نظام Clan King个ESPORTSツ - لا ترد على هذا البريد
+            اذا احتجت الرد ابعت رسالتك هناhttps://clan-king-esport-production.up.railway.app/#inquiries
           </p>
         </div>
       `
