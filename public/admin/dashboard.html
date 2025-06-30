@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة التحكم - STORE King个ESPORTSツ</title>
+  <title>لوحة التحكم - Clan King个ESPORTSツ</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
@@ -42,7 +42,7 @@
       <div class="p-4 flex items-center justify-between border-b border-gray-700">
         <a href="dashboard.html" class="flex items-center">
           <i class="fas fa-crown text-yellow-400 text-xl"></i>
-          <span class="sidebar-text text-xl font-bold mr-2">STORE King</span>
+          <span class="sidebar-text text-xl font-bold mr-2">Clan King个ESPORTSツ</span>
         </a>
         <button id="toggleSidebar" class="text-gray-400 hover:text-white">
           <i class="fas fa-bars"></i>
@@ -81,12 +81,6 @@
               <span class="sidebar-text mr-3">النتائج المعتمدة</span>
             </a>
           </li>
-          <li class="border-t border-gray-700 pt-2 mt-2">
-            <a href="/admin/logout" class="flex items-center p-2 rounded hover:bg-gray-700 text-red-400" id="logoutBtn">
-              <i class="fas fa-sign-out-alt"></i>
-              <span class="sidebar-text mr-3">تسجيل الخروج</span>
-            </a>
-          </li>
         </ul>
       </nav>
     </div>
@@ -106,8 +100,21 @@
             <i class="fas fa-moon dark:hidden"></i>
             <i class="fas fa-sun hidden dark:inline"></i>
           </button>
+          
+          <!-- قائمة الترس مع زر تسجيل الخروج -->
+          <div class="relative">
+            <button id="settingsDropdownBtn" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700">
+              <i class="fas fa-cog"></i>
+            </button>
+            <div id="settingsDropdown" class="hidden absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg z-50">
+              <a href="/admin/logout" class="block px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                <i class="fas fa-sign-out-alt mr-2"></i> تسجيل الخروج
+              </a>
+            </div>
+          </div>
+          
           <div class="flex items-center">
-            <img src="https://ui-avatars.com/api/?name=Admin&background=random" alt="Admin" class="w-8 h-8 rounded-full">
+            <span class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-sm font-bold">Clan King个ESPORTSツ</span>
             <span class="mr-2 text-gray-800 dark:text-white">المدير</span>
           </div>
         </div>
@@ -234,7 +241,7 @@
                 </div>
                 <div class="mb-4">
                   <label class="block text-gray-700 dark:text-gray-300 mb-2">اسم المرسل (اختياري)</label>
-                  <input type="text" id="senderName" class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700" placeholder="STORE King个ESPORTSツ">
+                  <input type="text" id="senderName" class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700" placeholder="Clan King个ESPORTSツ">
                 </div>
                 <div class="mb-4">
                   <label class="block text-gray-700 dark:text-gray-300 mb-2">الرسالة</label>
@@ -930,7 +937,7 @@ if (tabTextElement) {
     
     const email = document.getElementById('playerEmail').value;
     const message = document.getElementById('messageContent').value;
-    const senderName = document.getElementById('senderName').value || 'STORE King个ESPORTSツ';
+    const senderName = document.getElementById('senderName').value || 'Clan King个ESPORTSツ';
     
     try {
       const response = await fetch('/admin/send-message', {
@@ -1201,26 +1208,19 @@ document.getElementById('editResultForm').addEventListener('submit', async (e) =
     document.getElementById('editResultModal').classList.add('hidden');
   });
   
-  // تسجيل الخروج
-  document.getElementById('logoutBtn').addEventListener('click', async (e) => {
-    e.preventDefault();
-    
-    try {
-      const response = await fetch('/admin/logout');
-      const data = await response.json();
-      
-      if (data.success) {
-        window.location.href = '/admin-login.html';
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-      showError('حدث خطأ أثناء تسجيل الخروج');
-    }
+  // معالجة القائمة المنسدلة للتسجيل الخروج
+  document.getElementById('settingsDropdownBtn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    document.getElementById('settingsDropdown').classList.toggle('hidden');
   });
-  
+
+  // إغلاق القائمة المنسدلة عند النقر خارجها
+  document.addEventListener('click', function() {
+    document.getElementById('settingsDropdown').classList.add('hidden');
+  });
+
   // تحميل البيانات عند بدء التشغيل
   checkSession();
 </script>
 </body>
 </html>
-
