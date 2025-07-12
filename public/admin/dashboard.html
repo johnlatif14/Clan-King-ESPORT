@@ -461,15 +461,14 @@
   </div>
 
  <script>
-  // أضف هذا الكود في بداية ملف script في dashboard.html
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('Page elements:', {
-    pageTitle: document.getElementById('pageTitle'),
-    resultsTable: document.getElementById('resultsTable'),
-    tabs: document.querySelectorAll('[data-tab]')
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('Page elements:', {
+      pageTitle: document.getElementById('pageTitle'),
+      resultsTable: document.getElementById('resultsTable'),
+      tabs: document.querySelectorAll('[data-tab]')
+    });
   });
-});
-  // تحقق من الجلسة عند تحميل الصفحة
+
   async function checkSession() {
     try {
       const response = await fetch('/admin/check-session');
@@ -486,18 +485,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // تحميل البيانات
   async function loadData() {
     try {
       const response = await fetch('/admin/data');
       const data = await response.json();
       
-      // تحديث الإحصائيات
       document.getElementById('totalBookings').textContent = data.bookings.length;
       document.getElementById('newInquiries').textContent = data.inquiries.filter(i => i.status === 'new').length;
       document.getElementById('approvedResults').textContent = data.results.length;
       
-      // عرض آخر الطلبات
       const recentBookings = data.bookings.slice(0, 5);
       const recentBookingsHtml = recentBookings.map(booking => `
         <tr>
@@ -516,7 +512,6 @@ document.addEventListener('DOMContentLoaded', () => {
       `).join('');
       document.getElementById('recentBookings').innerHTML = recentBookingsHtml;
       
-      // عرض جميع الطلبات
       renderBookingsTable(data.bookings);
       renderInquiriesTable(data.inquiries);
       renderResultsTable(data.results);
@@ -527,7 +522,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-  // عرض جدول الطلبات
   function renderBookingsTable(bookings) {
     const filter = document.getElementById('bookingFilter').value;
     let filteredBookings = bookings;
@@ -558,8 +552,12 @@ document.addEventListener('DOMContentLoaded', () => {
             <i class="fas fa-trash"></i>
           </button>
           ${booking.gameVideo ? `
-            <a href="${booking.gameVideo}" target="_blank" class="p-1 text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">
-              <i class="fas fa-video"></i>
+            <span class="mx-1 text-gray-400">|</span>
+            <a href="${booking.gameVideo}" target="_blank" class="p-1 text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300" title="عرض الفيديو">
+              <i class="fas fa-eye"></i>
+            </a>
+            <a href="${booking.gameVideo}" download class="p-1 text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300" title="تحميل الفيديو">
+              <i class="fas fa-download"></i>
             </a>
           ` : ''}
         </td>
@@ -568,7 +566,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('bookingsTable').innerHTML = bookingsHtml;
     
-    // إضافة معالجات الأحداث لأزرار التعديل
     document.querySelectorAll('.edit-booking').forEach(button => {
       button.addEventListener('click', () => {
         const id = button.getAttribute('data-id');
@@ -583,7 +580,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
     
-    // إضافة معالجات الأحداث لأزرار الحذف
     document.querySelectorAll('.delete-booking').forEach(button => {
       button.addEventListener('click', () => {
         const id = button.getAttribute('data-id');
@@ -593,7 +589,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // عرض جدول الاستفسارات
   function renderInquiriesTable(inquiries) {
     const filter = document.getElementById('inquiryFilter').value;
     let filteredInquiries = inquiries;
@@ -640,7 +635,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('inquiriesTable').innerHTML = inquiriesHtml;
     
-    // إضافة معالجات الأحداث لأزرار الرد
     document.querySelectorAll('.respond-inquiry').forEach(button => {
       button.addEventListener('click', () => {
         const id = button.getAttribute('data-id');
@@ -649,7 +643,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
     
-    // إضافة معالجات الأحداث لأزرار عرض الرد
     document.querySelectorAll('.view-response').forEach(button => {
       button.addEventListener('click', () => {
         const response = button.getAttribute('data-response');
@@ -657,7 +650,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
     
-    // إضافة معالجات الأحداث لأزرار حذف الاستفسار
     document.querySelectorAll('.delete-inquiry').forEach(button => {
       button.addEventListener('click', () => {
         const id = button.getAttribute('data-id');
@@ -667,113 +659,106 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // عرض جدول النتائج
-function renderResultsTable(results) {
-  const resultsTable = document.getElementById('resultsTable');
-  
-  if (!results || !Array.isArray(results)) {
-    resultsTable.innerHTML = `
-      <tr>
-        <td colspan="4" class="text-center py-4 text-red-500">
-          خطأ في تحميل النتائج
-        </td>
-      </tr>
-    `;
-    return;
-  }
-
-  if (results.length === 0) {
-    resultsTable.innerHTML = `
-      <tr>
-        <td colspan="4" class="text-center py-4 text-gray-500">
-          لا توجد نتائج معتمدة حتى الآن
-        </td>
-      </tr>
-    `;
-    return;
-  }
-
-  const resultsHtml = results.map(result => {
-    // تأكد من أن جميع الحقول موجودة
-    const playerName = result.playerName || 'غير معروف';
-    const playerPhone = result.playerPhone || 'غير متوفر';
-    const uploadedAt = result.uploadedAt ? new Date(result.uploadedAt).toLocaleDateString('ar-EG') : 'غير معروف';
+  function renderResultsTable(results) {
+    const resultsTable = document.getElementById('resultsTable');
     
-    return `
-      <tr>
-        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">${playerName}</td>
-        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">${playerPhone}</td>
-        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">${uploadedAt}</td>
-        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">
-          ${result.fileUrl ? `
-            <a href="${result.fileUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline mr-2">
-              <i class="fas fa-eye"></i> عرض
-            </a>
-          ` : ''}
-          <button class="edit-result p-1 text-yellow-600 dark:text-yellow-400 hover:text-yellow-900 dark:hover:text-yellow-300 mr-2" 
-                  data-id="${result.id}" data-phone="${playerPhone}" data-name="${playerName}">
-            <i class="fas fa-edit"></i> تعديل
-          </button>
-          <button class="delete-result p-1 text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300" 
-                  data-id="${result.id}">
-            <i class="fas fa-trash"></i> حذف
-          </button>
-        </td>
-      </tr>
-    `;
-  }).join('');
-  
-  resultsTable.innerHTML = resultsHtml;
-  
-  // إعادة ربط معالجات الأحداث
-  bindResultEvents();
-}
+    if (!results || !Array.isArray(results)) {
+      resultsTable.innerHTML = `
+        <tr>
+          <td colspan="4" class="text-center py-4 text-red-500">
+            خطأ في تحميل النتائج
+          </td>
+        </tr>
+      `;
+      return;
+    }
 
-function bindResultEvents() {
-  // إضافة معالجات الأحداث لأزرار التعديل
-  document.querySelectorAll('.edit-result').forEach(button => {
-    button.addEventListener('click', (e) => {
-      const id = button.getAttribute('data-id');
-      const phone = button.getAttribute('data-phone');
-      const name = button.getAttribute('data-name');
-      
-      document.getElementById('editResultId').value = id;
-      document.getElementById('editPlayerPhone').value = phone;
-      document.getElementById('editPlayerName').value = name || '';
-      
-      document.getElementById('editResultModal').classList.remove('hidden');
-    });
-  });
-  
-  // إضافة معالجات الأحداث لأزرار الحذف
-  document.querySelectorAll('.delete-result').forEach(button => {
-    button.addEventListener('click', handleDeleteResult);
-  });
-}
+    if (results.length === 0) {
+      resultsTable.innerHTML = `
+        <tr>
+          <td colspan="4" class="text-center py-4 text-gray-500">
+            لا توجد نتائج معتمدة حتى الآن
+          </td>
+        </tr>
+      `;
+      return;
+    }
 
-async function handleDeleteResult(e) {
-  const id = e.currentTarget.getAttribute('data-id');
-  if (confirm('هل أنت متأكد من حذف هذه النتيجة؟')) {
-    try {
-      const response = await fetch(`/admin/delete-result/${id}`, {
-        method: 'DELETE'
+    const resultsHtml = results.map(result => {
+      const playerName = result.playerName || 'غير معروف';
+      const playerPhone = result.playerPhone || 'غير متوفر';
+      const uploadedAt = result.uploadedAt ? new Date(result.uploadedAt).toLocaleDateString('ar-EG') : 'غير معروف';
+      
+      return `
+        <tr>
+          <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">${playerName}</td>
+          <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">${playerPhone}</td>
+          <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">${uploadedAt}</td>
+          <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">
+            ${result.fileUrl ? `
+              <a href="${result.fileUrl}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline mr-2">
+                <i class="fas fa-eye"></i> عرض
+              </a>
+            ` : ''}
+            <button class="edit-result p-1 text-yellow-600 dark:text-yellow-400 hover:text-yellow-900 dark:hover:text-yellow-300 mr-2" 
+                    data-id="${result.id}" data-phone="${playerPhone}" data-name="${playerName}">
+              <i class="fas fa-edit"></i> تعديل
+            </button>
+            <button class="delete-result p-1 text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300" 
+                    data-id="${result.id}">
+              <i class="fas fa-trash"></i> حذف
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    
+    resultsTable.innerHTML = resultsHtml;
+    bindResultEvents();
+  }
+
+  function bindResultEvents() {
+    document.querySelectorAll('.edit-result').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const id = button.getAttribute('data-id');
+        const phone = button.getAttribute('data-phone');
+        const name = button.getAttribute('data-name');
+        
+        document.getElementById('editResultId').value = id;
+        document.getElementById('editPlayerPhone').value = phone;
+        document.getElementById('editPlayerName').value = name || '';
+        
+        document.getElementById('editResultModal').classList.remove('hidden');
       });
-      const data = await response.json();
-      
-      if (data.success) {
-        showSuccess('تم حذف النتيجة بنجاح');
-        loadData();
-      } else {
-        showError(data.message || 'حدث خطأ أثناء حذف النتيجة');
+    });
+    
+    document.querySelectorAll('.delete-result').forEach(button => {
+      button.addEventListener('click', handleDeleteResult);
+    });
+  }
+
+  async function handleDeleteResult(e) {
+    const id = e.currentTarget.getAttribute('data-id');
+    if (confirm('هل أنت متأكد من حذف هذه النتيجة؟')) {
+      try {
+        const response = await fetch(`/admin/delete-result/${id}`, {
+          method: 'DELETE'
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+          showSuccess('تم حذف النتيجة بنجاح');
+          loadData();
+        } else {
+          showError(data.message || 'حدث خطأ أثناء حذف النتيجة');
+        }
+      } catch (error) {
+        console.error('Error deleting result:', error);
+        showError('حدث خطأ أثناء حذف النتيجة');
       }
-    } catch (error) {
-      console.error('Error deleting result:', error);
-      showError('حدث خطأ أثناء حذف النتيجة');
     }
   }
-}
   
-  // الحصول على كلاس الحالة
   function getStatusClass(status) {
     switch(status) {
       case 'approved': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
@@ -782,7 +767,6 @@ async function handleDeleteResult(e) {
     }
   }
   
-  // الحصول على نص الحالة
   function getStatusText(status) {
     switch(status) {
       case 'approved': return 'مقبول';
@@ -791,7 +775,6 @@ async function handleDeleteResult(e) {
     }
   }
   
-  // عرض رسالة نجاح
   function showSuccess(message) {
     const alertDiv = document.createElement('div');
     alertDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
@@ -803,7 +786,6 @@ async function handleDeleteResult(e) {
     }, 3000);
   }
   
-  // عرض رسالة خطأ
   function showError(message) {
     const alertDiv = document.createElement('div');
     alertDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50';
@@ -815,18 +797,15 @@ async function handleDeleteResult(e) {
     }, 3000);
   }
   
-  // تبديل الوضع الداكن/الفاتح
   document.getElementById('toggleDarkMode').addEventListener('click', () => {
     document.documentElement.classList.toggle('dark');
     localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
   });
   
-  // تحميل الوضع المفضل
   if (localStorage.getItem('darkMode') === 'true') {
     document.documentElement.classList.add('dark');
   }
   
-  // تبديل الشريط الجانبي
   function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const mainContent = document.querySelector('.main-content');
@@ -847,52 +826,43 @@ async function handleDeleteResult(e) {
   document.getElementById('toggleSidebar').addEventListener('click', toggleSidebar);
   document.getElementById('mobileToggleSidebar').addEventListener('click', toggleSidebar);
   
-  // تبديل بين الأقسام
   document.querySelectorAll('[data-tab]').forEach(tab => {
     tab.addEventListener('click', (e) => {
       e.preventDefault();
       const tabId = tab.getAttribute('data-tab');
       
-      // إخفاء جميع الأقسام
       document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.add('hidden');
       });
       
-      // إزالة النشاط من جميع الأزرار
       document.querySelectorAll('[data-tab]').forEach(t => {
         t.classList.remove('active-tab');
         t.classList.remove('bg-gray-700');
       });
       
-      // إظهار القسم المحدد
       document.getElementById(`${tabId}Tab`).classList.remove('hidden');
       
-      // إضافة النشاط للزر المحدد
       tab.classList.add('active-tab');
       tab.classList.add('bg-gray-700');
       
-      // تحديث عنوان الصفحة
-const tabTextElement = tab.querySelector('.sidebar-text');
-if (tabTextElement) {
-  const pageTitleElement = document.getElementById('pageTitle');
-  if (pageTitleElement) {
-    pageTitleElement.textContent = tabTextElement.textContent.trim();
-  }
-}
+      const tabTextElement = tab.querySelector('.sidebar-text');
+      if (tabTextElement) {
+        const pageTitleElement = document.getElementById('pageTitle');
+        if (pageTitleElement) {
+          pageTitleElement.textContent = tabTextElement.textContent.trim();
+        }
+      }
     });
   });
   
-  // تصفية الطلبات
   document.getElementById('bookingFilter').addEventListener('change', () => {
     loadData();
   });
   
-  // تصفية الاستفسارات
   document.getElementById('inquiryFilter').addEventListener('change', () => {
     loadData();
   });
   
-  // حفظ تعديل حالة الطلب
   document.getElementById('editBookingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -924,7 +894,6 @@ if (tabTextElement) {
     }
   });
   
-  // إرسال الرسالة
   document.getElementById('sendMessageForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -975,7 +944,6 @@ if (tabTextElement) {
     }
   });
 
-  // رفع النتيجة
   document.getElementById('uploadResultForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -1003,7 +971,7 @@ if (tabTextElement) {
         `;
         document.getElementById('uploadResultForm').reset();
         showSuccess('تم رفع النتيجة بنجاح');
-        loadData(); // تحديث البيانات
+        loadData();
       } else {
         responseDiv.innerHTML = `
           <div class="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded">
@@ -1025,68 +993,62 @@ if (tabTextElement) {
     }
   });
   
-  // تعديل النتيجة
-document.getElementById('editResultForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
+  document.getElementById('editResultForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'جاري الحفظ...';
+    
+    try {
+      const formData = new FormData(e.target);
+      const id = document.getElementById('editResultId').value;
+      const playerPhone = document.getElementById('editPlayerPhone').value;
+      
+      if (!id || !playerPhone) {
+        throw new Error('معرّف النتيجة ورقم الهاتف مطلوبان');
+      }
+      
+      formData.append('id', id);
+      formData.append('playerPhone', playerPhone);
+      
+      const playerName = document.getElementById('editPlayerName').value;
+      if (playerName) {
+        formData.append('playerName', playerName);
+      }
+      
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+      
+      const response = await fetch('/admin/update-result', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'حدث خطأ في الخادم');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        document.getElementById('editResultModal').classList.add('hidden');
+        showSuccess(data.message || 'تم تحديث النتيجة بنجاح');
+        loadData();
+      } else {
+        throw new Error(data.message || 'فشل تحديث النتيجة');
+      }
+    } catch (error) {
+      console.error('Update failed:', error);
+      showError(error.message || 'حدث خطأ أثناء تحديث النتيجة');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'حفظ التعديلات';
+    }
+  });
   
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = 'جاري الحفظ...';
-  
-  try {
-    const formData = new FormData(e.target);
-    const id = document.getElementById('editResultId').value;
-    const playerPhone = document.getElementById('editPlayerPhone').value;
-    
-    // التحقق من الحقول المطلوبة
-    if (!id || !playerPhone) {
-      throw new Error('معرّف النتيجة ورقم الهاتف مطلوبان');
-    }
-    
-    // إضافة الحقول الإجبارية يدوياً
-    formData.append('id', id);
-    formData.append('playerPhone', playerPhone);
-    
-    // إضافة الحقول الاختيارية إذا كانت موجودة
-    const playerName = document.getElementById('editPlayerName').value;
-    if (playerName) {
-      formData.append('playerName', playerName);
-    }
-    
-    // تسجيل البيانات المرسلة للتتبع
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
-    
-    const response = await fetch('/admin/update-result', {
-      method: 'POST',
-      body: formData
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'حدث خطأ في الخادم');
-    }
-    
-    const data = await response.json();
-    
-    if (data.success) {
-      document.getElementById('editResultModal').classList.add('hidden');
-      showSuccess(data.message || 'تم تحديث النتيجة بنجاح');
-      loadData();
-    } else {
-      throw new Error(data.message || 'فشل تحديث النتيجة');
-    }
-  } catch (error) {
-    console.error('Update failed:', error);
-    showError(error.message || 'حدث خطأ أثناء تحديث النتيجة');
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = 'حفظ التعديلات';
-  }
-});
-  
-  // إرسال رد على الاستفسار
   document.getElementById('respondInquiryForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -1118,7 +1080,6 @@ document.getElementById('editResultForm').addEventListener('submit', async (e) =
     }
   });
   
-  // حذف الطلب
   document.getElementById('confirmDeleteBooking').addEventListener('click', async () => {
     const id = document.getElementById('deleteBookingId').value;
     
@@ -1141,7 +1102,6 @@ document.getElementById('editResultForm').addEventListener('submit', async (e) =
     }
   });
   
-  // حذف الاستفسار
   document.getElementById('confirmDeleteInquiry').addEventListener('click', async () => {
     const id = document.getElementById('deleteInquiryId').value;
     
@@ -1164,7 +1124,6 @@ document.getElementById('editResultForm').addEventListener('submit', async (e) =
     }
   });
   
-  // إغلاق modal تعديل الطلب
   document.getElementById('closeBookingModal').addEventListener('click', () => {
     document.getElementById('editBookingModal').classList.add('hidden');
   });
@@ -1173,12 +1132,10 @@ document.getElementById('editResultForm').addEventListener('submit', async (e) =
     document.getElementById('editBookingModal').classList.add('hidden');
   });
   
-  // إغلاق modal حذف الطلب
   document.getElementById('cancelDeleteBooking').addEventListener('click', () => {
     document.getElementById('deleteBookingModal').classList.add('hidden');
   });
   
-  // إغلاق modal الرد على الاستفسار
   document.getElementById('closeInquiryModal').addEventListener('click', () => {
     document.getElementById('respondInquiryModal').classList.add('hidden');
   });
@@ -1187,12 +1144,10 @@ document.getElementById('editResultForm').addEventListener('submit', async (e) =
     document.getElementById('respondInquiryModal').classList.add('hidden');
   });
   
-  // إغلاق modal حذف الاستفسار
   document.getElementById('cancelDeleteInquiry').addEventListener('click', () => {
     document.getElementById('deleteInquiryModal').classList.add('hidden');
   });
   
-  // إغلاق modal تعديل النتيجة
   document.getElementById('closeResultModal').addEventListener('click', () => {
     document.getElementById('editResultModal').classList.add('hidden');
   });
@@ -1201,7 +1156,6 @@ document.getElementById('editResultForm').addEventListener('submit', async (e) =
     document.getElementById('editResultModal').classList.add('hidden');
   });
   
-  // تسجيل الخروج
   document.getElementById('logoutBtn').addEventListener('click', async (e) => {
     e.preventDefault();
     
@@ -1218,7 +1172,6 @@ document.getElementById('editResultForm').addEventListener('submit', async (e) =
     }
   });
   
-  // تحميل البيانات عند بدء التشغيل
   checkSession();
 </script>
 </body>
